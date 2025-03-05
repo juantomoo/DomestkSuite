@@ -1,0 +1,23 @@
+{
+  "name": "domestika-offline",
+  "version": "1.0.0",
+  "description": "Herramienta Node.js para descargar cursos completos de Domestika.",
+  "main": "downloader.js",
+  "scripts": {
+    "start": "node downloader.js",
+    "serve": "http-server -p 8080"
+  },
+  "author": "Juan Gómez (Tomoo)",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^20.7.2",
+    "ws": "^8.13.0",
+    "ffmpeg-static": "^4.4.0",
+    "srt-to-vtt": "^1.1.3"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

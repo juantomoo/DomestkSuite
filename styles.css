@@ -1,0 +1,460 @@
+/* ----------------------------------------------------------
+   CITYPOP/VAPORWAVE VARIABLES
+----------------------------------------------------------- */
+:root {
+  --bg-color: #0a0c1f;         /* Fondo oscuro principal */
+  --accent-color: #ff80d5;     /* Rosa neón */
+  --accent-color-2: #80ffe8;   /* Cian neón */
+  --text-color: #ffffff;       /* Texto base */
+  --control-bg: #1a1a2f;       /* Fondos de barras y paneles */
+  --control-hover: #2d2d4f;    /* Hover en controles */
+  --border-radius: 8px;
+  --transition-speed: 0.3s;
+  --font-family: 'Poppins', Helvetica, Arial, sans-serif;
+}
+
+/* ----------------------------------------------------------
+   RESETEO Y CONFIGURACIÓN BÁSICA
+----------------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family), sans-serif;
+  overflow-x: hidden; /* Evitar scroll horizontal */
+  line-height: 1.5;
+}
+
+/* Regla global para imágenes */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ----------------------------------------------------------
+   VIDEO DE FONDO (GLOBAL)
+----------------------------------------------------------- */
+#video-element {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  -o-object-fit: cover;
+  -ms-object-fit: cover;
+  z-index: -1;
+  pointer-events: none; /* Deshabilita la interacción con controles nativos */
+}
+
+/* Ocultar controles nativos en navegadores WebKit/Mozilla */
+#video-element::-webkit-media-controls,
+#video-element::-moz-media-controls {
+  display: none !important;
+}
+
+/* ----------------------------------------------------------
+   MODO REPRODUCCIÓN (Streaming)
+----------------------------------------------------------- */
+/* Cuando el body tenga la clase "playing", el video se eleva */
+body.playing #video-element {
+  z-index: 0;
+  pointer-events: auto;
+}
+
+/* Overlay para la información del video (lección, módulo, curso) */
+#player-info {
+  position: absolute;
+  bottom: 80px; /* Cerca de la barra inferior que mide 60px, más algo de margen */
+  left: 20px;
+  width: auto;
+  text-align: left;
+  z-index: 100;
+  color: var(--text-color);
+  background-color: rgba(10, 12, 31, 0.7); /* Capa con transparencia para disminuir énfasis del video */
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  transition: opacity 0.5s ease;
+}
+
+/* Tamaños de fuente y márgenes para los títulos */
+#player-info h1 {
+  font-size: 2em;
+  margin: 0 0 0.3em 0;
+}
+#player-info h2 {
+  font-size: 1.5em;
+  margin: 0 0 0.3em 0;
+}
+#player-info h3 {
+  font-size: 1em;
+  margin: 0;
+}
+
+/* Se oculta junto con los demás controles */
+#player-info.hide-controls {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ----------------------------------------------------------
+   BARRA SUPERIOR
+----------------------------------------------------------- */
+header {
+  width: 100%;
+  height: 60px;
+  background: var(--control-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  transition: opacity var(--transition-speed);
+}
+
+.app-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--transition-speed);
+}
+
+.app-name:hover {
+  color: var(--accent-color);
+}
+
+.nav-icons {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-icons img {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: transform var(--transition-speed);
+}
+
+.nav-icons img:hover {
+  transform: scale(1.1);
+}
+
+/* ----------------------------------------------------------
+   CONTENIDO PRINCIPAL
+----------------------------------------------------------- */
+main {
+  width: 100%;
+  min-height: calc(100% - 120px); /* Resta header (60px) + footer (60px) */
+  padding-top: 60px;   /* Evita que el contenido quede debajo del header */
+  padding-bottom: 60px;/* Evita que el contenido quede debajo del footer */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: var(--bg-color);
+  transition: background var(--transition-speed);
+}
+
+/* Las pantallas (componentes) que se van ocultando/mostrando */
+.screen {
+  display: none;
+  width: 90%;
+  max-width: 1000px;
+  margin-top: 2rem;
+}
+
+.screen.active {
+  display: block;
+}
+
+/* Pantalla de inicio (por defecto vacía) */
+#home-screen {
+  background: var(--control-bg);
+  border-radius: var(--border-radius);
+  min-height: 200px; /* Ejemplo de altura mínima */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ----------------------------------------------------------
+   PANTALLA DE DESCARGA
+----------------------------------------------------------- */
+#download-screen {
+  background: var(--control-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+#download-screen h2 {
+  margin-bottom: 1rem;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border: none;
+  outline: none;
+  background: var(--control-hover);
+  color: var(--text-color);
+}
+
+.download-btn {
+  background: var(--accent-color);
+  color: #000;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background var(--transition-speed);
+}
+
+.download-btn:hover {
+  background: var(--accent-color-2);
+}
+
+/* Notificaciones de descarga */
+.notifications {
+  margin-top: 1rem;
+  min-height: 40px;
+  background: #222;
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  display: none;
+}
+
+.notifications.active {
+  display: block;
+}
+
+/* ----------------------------------------------------------
+   PANTALLA DE VISUALIZACIÓN
+----------------------------------------------------------- */
+#visualize-screen {
+  background: var(--control-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+#visualize-screen h2 {
+  margin-bottom: 1rem;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+.courses-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.course-card {
+  width: 180px;
+  background: var(--control-hover);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--transition-speed);
+}
+
+.course-card:hover {
+  transform: scale(1.02);
+}
+
+.course-thumb {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  background: #444;
+}
+
+.course-info {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.course-info h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-color-2);
+}
+
+/* ----------------------------------------------------------
+   PANTALLA DE MÓDULOS
+----------------------------------------------------------- */
+#modules-screen {
+  background: var(--control-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+#modules-screen h2 {
+  margin-bottom: 1rem;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+#modules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.playlist-item {
+  background: var(--control-hover);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background var(--transition-speed);
+}
+
+.playlist-item:hover {
+  background: var(--accent-color-2);
+  color: #000;
+}
+
+/* ----------------------------------------------------------
+   PANTALLA DE LECCIONES
+----------------------------------------------------------- */
+#lessons-screen {
+  background: var(--control-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+#lessons-screen h2 {
+  margin-bottom: 1rem;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+#lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ----------------------------------------------------------
+   PANTALLA DEL REPRODUCTOR
+----------------------------------------------------------- */
+#player-screen {
+  background: var(--control-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+.player-heading {
+  margin-bottom: 1rem;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------
+   BARRA INFERIOR (Controles de reproducción)
+----------------------------------------------------------- */
+footer {
+  width: 100%;
+  height: 60px;
+  background: var(--control-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  padding: 0 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  transition: opacity var(--transition-speed);
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.player-controls img {
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  transition: transform var(--transition-speed);
+}
+
+.player-controls img:hover {
+  transform: scale(1.1);
+}
+
+.time-slider {
+  width: 200px;
+  cursor: pointer;
+}
+
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.volume-slider {
+  width: 80px;
+  cursor: pointer;
+}
+
+/* ----------------------------------------------------------
+   CLASES DE OCULTACIÓN
+----------------------------------------------------------- */
+.hide-controls {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.5s ease;
+}
+
+/* ----------------------------------------------------------
+   RESPONSIVE
+----------------------------------------------------------- */
+@media (max-width: 768px) {
+  .time-slider {
+    width: 120px;
+  }
+  .courses-grid {
+    justify-content: flex-start;
+  }
+  .course-card {
+    width: 140px;
+  }
+  .course-info h3 {
+    font-size: 0.9rem;
+  }
+}

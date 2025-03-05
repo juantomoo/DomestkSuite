@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>DmstkSuite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DomstkSuite es una aplicación web para descargar y visualizar cursos de Domestika sin conexión." />
+  <!-- Favicon (opcional) -->
+  <!-- <link rel="icon" href="icons/favicon.ico" /> -->
+  <!-- Enlace a los estilos -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- VIDEO DE FONDO -->
+  <video id="video-element" preload="auto" muted loop autoplay>
+    <!-- Mensaje de fallback para navegadores que no soporten el elemento de video -->
+    Tu navegador no soporta la reproducción de video.
+    <!-- Puedes agregar <track> para subtítulos si lo deseas -->
+  </video>
+
+  <!-- Barra Superior (navegación) -->
+  <header>
+    <!-- Nombre de la aplicación (clic → ir a la pantalla de inicio) -->
+    <div class="app-name" id="btn-home">DmstkSuite</div>
+    <!-- Íconos de navegación (descargar y visualizar) -->
+    <div class="nav-icons">
+      <img src="icons/download.svg" alt="Descargar" id="icon-download" />
+      <img src="icons/visualize.svg" alt="Visualizar" id="icon-visualize" />
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main id="main-content">
+    <!-- Pantalla de Inicio -->
+    <section id="home-screen" class="screen active" aria-label="Pantalla de inicio">
+      <!-- Mensaje de bienvenida o contenido inicial -->
+    </section>
+
+    <!-- Pantalla de Descarga -->
+    <section id="download-screen" class="screen" aria-label="Pantalla de descarga">
+      <h2>Descargar Cursos</h2>
+      <form id="download-form">
+        <div class="form-group">
+          <label for="course-url">URL del curso:</label>
+          <input type="text" id="course-url" required />
+        </div>
+        <div class="form-group">
+          <label for="subtitle-lang">Idioma de subtítulos (ej: es):</label>
+          <input type="text" id="subtitle-lang" required />
+        </div>
+        <div class="form-group">
+          <label for="session-cookie">Cookie <em>_domestika_session</em>:</label>
+          <input type="text" id="session-cookie" required />
+        </div>
+        <div class="form-group">
+          <label for="credentials">Cookie <em>_credentials_</em>:</label>
+          <input type="text" id="credentials" required />
+        </div>
+        <button type="submit" class="download-btn">Iniciar Descarga</button>
+      </form>
+      <div class="notifications" id="download-notifications"></div>
+    </section>
+
+    <!-- Pantalla de Visualización -->
+    <section id="visualize-screen" class="screen" aria-label="Pantalla de visualización">
+      <h2>Visualizar Cursos</h2>
+      <div class="courses-grid" id="courses-grid"></div>
+    </section>
+
+    <!-- Pantalla de Módulos -->
+    <section id="modules-screen" class="screen" aria-label="Pantalla de módulos">
+      <h2>Módulos del Curso</h2>
+      <div id="modules-list"></div>
+    </section>
+
+    <!-- Pantalla de Lecciones -->
+    <section id="lessons-screen" class="screen" aria-label="Pantalla de lecciones">
+      <h2>Lecciones del Módulo</h2>
+      <div id="lessons-list"></div>
+    </section>
+
+    <!-- Pantalla del Reproductor -->
+    <section id="player-screen" class="screen" aria-label="Reproductor de video">
+      <h2 class="player-heading">Reproductor de Video</h2>
+      <!-- Overlay con la información del video -->
+      <div id="player-info">
+        <h1 id="lesson-title"></h1>
+        <h2 id="module-title"></h2>
+        <h3 id="course-title"></h3>
+      </div>
+      <p>Aquí podrías mostrar detalles del video seleccionado o controles adicionales.</p>
+    </section>
+  </main>
+
+  <!-- Barra Inferior (Controles de reproducción) -->
+  <footer>
+    <div class="player-controls">
+      <img src="icons/previous.svg" alt="Retroceder" id="btn-prev" />
+      <img src="icons/play.svg" alt="Reproducir/Pausar" id="btn-play-pause" />
+      <img src="icons/next.svg" alt="Avanzar" id="btn-next" />
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value="0"
+        id="time-slider"
+        class="time-slider"
+        aria-label="Control de progreso"
+      />
+      <img src="icons/subtitles.svg" alt="Subtítulos" id="btn-subtitles" />
+      <div class="volume-container">
+        <img src="icons/volume.svg" alt="Sonido" id="btn-mute" />
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value="1"
+          class="volume-slider"
+          id="volume-slider"
+          aria-label="Control de volumen"
+        />
+      </div>
+      <img src="icons/fullscreen.svg" alt="Pantalla completa" id="btn-fullscreen" />
+    </div>
+  </footer>
+
+  <!-- Script principal -->
+  <script src="script.js"></script>
+</body>
+</html>
