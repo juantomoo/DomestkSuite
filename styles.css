@@ -105,22 +105,45 @@ body.playing #video-element {
 }
 
 /* ----------------------------------------------------------
-   BARRA SUPERIOR
+   BARRA SUPERIOR (Futurista)
 ----------------------------------------------------------- */
 header {
-  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
   height: 60px;
-  background: var(--control-bg);
+  background: rgba(26,26,47,0.85); /* 85% opacidad sobre rgb(26,26,47) que es equivalente a #1a1a2f */
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
-  position: fixed;
-  top: 0;
-  left: 0;
   z-index: 1000;
+  border-radius: var(--border-radius);
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
   transition: opacity var(--transition-speed);
+  backdrop-filter: blur(5px); /* Efecto de cristal */
+  overflow: hidden;
+  /* Para posicionar el efecto de luz */
+  position: relative;
+}
+
+header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: radial-gradient(circle at center, var(--accent-color) 0%, transparent 70%);
+  opacity: 0.3;
+  pointer-events: none;
+  transition: transform 0.5s ease;
+}
+
+header:hover::before {
+  transform: translateX(25%);
 }
 
 .app-name {
@@ -409,22 +432,43 @@ main {
 }
 
 /* ----------------------------------------------------------
-   BARRA INFERIOR (Controles de reproducción)
+   BARRA INFERIOR (Futurista)
 ----------------------------------------------------------- */
 footer {
-  width: 100%;
+  justify-content: center; /* Centrar contenido */
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 75%;
   height: 60px;
-  background: var(--control-bg);
+  background: rgba(26,26,47,0.85);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  z-index: 1000;
   padding: 0 1rem;
+  z-index: 1000;
+  border-radius: var(--border-radius);
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
   transition: opacity var(--transition-speed);
+  backdrop-filter: blur(5px);
+  overflow: hidden;
+  position: fixed;
+}
+
+footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: radial-gradient(circle at center, var(--accent-color) 0%, transparent 70%);
+  opacity: 0.3;
+  pointer-events: none;
+  transition: transform 0.5s ease;
+}
+
+footer:hover::before {
+  transform: translateX(25%);
 }
 
 .player-controls {
