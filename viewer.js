@@ -5,14 +5,19 @@
 
 const fs = require('fs');
 const path = require('path');
-const srt2vtt = require('srt-to-vtt'); // Librería para la conversión
+// Se elimina la dependencia a srt-to-vtt ya que usaremos conversión manual
 
 // Ajusta la ruta de la carpeta de cursos si es necesario
 const COURSES_DIR = path.join(__dirname, 'cursos');
 
 /**
  * Función auxiliar que convierte un archivo .srt a .vtt si no existe el .vtt.
- * Retorna una Promesa que se resuelve cuando termina la conversión (o si ya existe).
+ * Se realiza una conversión manual:
+ *   - Se elimina cualquier línea que contenga solo números (cue numbers).
+ *   - Se agrega la cabecera "WEBVTT" al inicio.
+ *   - Se reemplaza la coma (,) de las marcas de tiempo por un punto (.).
+ * @param {string} srtPath - Ruta del archivo .srt
+ * @returns {Promise<void>}
  */
 function convertSrtToVttIfNeeded(srtPath) {
   return new Promise((resolve) => {
@@ -25,24 +30,37 @@ function convertSrtToVttIfNeeded(srtPath) {
       return resolve();
     }
 
-    // De lo contrario, convertimos
-    srt2vtt(fs.createReadStream(srtPath))
-      .pipe(fs.createWriteStream(vttPath))
-      .on('finish', () => {
-        console.log(`Convertido a VTT: ${vttPath}`);
-        resolve();
-      })
-      .on('error', (err) => {
-        console.warn(`Error convirtiendo ${srtPath} a VTT:`, err);
+    fs.readFile(srtPath, 'utf8', (err, data) => {
+      if (err) {
+        console.warn(`Error leyendo ${srtPath}:`, err);
+        return resolve();
+      }
+
+      // Separar líneas y eliminar aquellas que son solo números (cue numbers)
+      let lines = data.split(/\r?\n/).filter(line => !/^\d+$/.test(line.trim()));
+
+      // Reemplazar la coma en las marcas de tiempo por un punto
+      let convertedData = lines.join('\n').replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+
+      // Agregar la cabecera WEBVTT
+      let vttData = 'WEBVTT\n\n' + convertedData;
+
+      fs.writeFile(vttPath, vttData, 'utf8', (writeErr) => {
+        if (writeErr) {
+          console.warn(`Error escribiendo ${vttPath}:`, writeErr);
+        } else {
+          console.log(`Convertido a VTT: ${vttPath}`);
+        }
         resolve();
       });
+    });
   });
 }
 
 /**
  * Recorre recursivamente "dirPath" en busca de archivos .srt.
  * Cada vez que encuentra uno, verifica si existe el .vtt correspondiente;
- * si no existe, lo crea.
+ * si no existe, lo crea mediante convertSrtToVttIfNeeded.
  * Retorna una Promesa que se resuelve cuando todas las conversiones han terminado.
  */
 async function convertAllSrtsInDir(dirPath) {
@@ -163,7 +181,7 @@ function listDownloadedCourses() {
 
 /**
  * Función asíncrona que:
- *   1) Convierte todos los .srt → .vtt donde falten.
+ *   1) Convierte todos los .srt → .vtt donde falten (método manual con eliminación de cue numbers).
  *   2) Llama a listDownloadedCourses() para retornar la lista de cursos.
  * 
  * Retorna una Promesa que se resuelve con el array de cursos.
@@ -175,8 +193,17 @@ async function listDownloadedCoursesWithConversion() {
   return listDownloadedCourses();
 }
 
-// Exporta ambas funciones
+// Ejecutar la conversión de subtítulos automáticamente al abrir la aplicación
+(async function initSubtitleConversion() {
+  try {
+    await convertAllSrtsInDir(COURSES_DIR);
+    console.log("Conversión automática de subtítulos SRT a VTT completada.");
+  } catch (err) {
+    console.error("Error durante la conversión automática de subtítulos:", err);
+  }
+})();
+
 module.exports = {
-  listDownloadedCourses,             // Función original (sin conversión)
-  listDownloadedCoursesWithConversion // Función asíncrona con conversión previa
+  listDownloadedCourses,
+  listDownloadedCoursesWithConversion
 };
