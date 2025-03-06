@@ -11,7 +11,9 @@ const lessonsScreen  = document.getElementById("lessons-screen");
 const playerScreen   = document.getElementById("player-screen");
 
 const downloadForm   = document.getElementById("download-form");
+// Se reutiliza "downloadNotifications" para contener tanto el progreso como el ticker
 const downloadNotifications = document.getElementById("download-notifications");
+
 const coursesGrid    = document.getElementById("courses-grid");
 const modulesList    = document.getElementById("modules-list");
 const lessonsList    = document.getElementById("lessons-list");
@@ -94,6 +96,19 @@ function initWebSocket() {
 
   socket.onopen = () => {
     console.log("WebSocket conectado");
+    // Inicializar contenedores internos en el área de notificaciones (si no existen)
+    if (downloadNotifications) {
+      if (!document.getElementById("progress-info")) {
+        const progressInfo = document.createElement("div");
+        progressInfo.id = "progress-info";
+        downloadNotifications.appendChild(progressInfo);
+      }
+      if (!document.getElementById("ticker-container")) {
+        const tickerContainer = document.createElement("div");
+        tickerContainer.id = "ticker-container";
+        downloadNotifications.appendChild(tickerContainer);
+      }
+    }
   };
 
   socket.onmessage = (event) => {
@@ -108,14 +123,21 @@ function initWebSocket() {
         console.error("Error desde el servidor:", data.message);
       }
       if (data.status === "downloading") {
-        if (downloadNotifications) {
-          downloadNotifications.textContent = `Descargando... ${data.progress}% completado. Tiempo restante: ${data.timeRemaining}`;
+        // Actualiza la información de progreso en el contenedor "progress-info"
+        const progressInfo = document.getElementById("progress-info");
+        if (progressInfo) {
+          progressInfo.textContent = `Descargando... ${data.progress}% completado. Tiempo restante: ${data.timeRemaining}`;
         }
       }
       if (data.status === "completed") {
-        if (downloadNotifications) {
-          downloadNotifications.textContent = "Descarga completada.";
+        const progressInfo = document.getElementById("progress-info");
+        if (progressInfo) {
+          progressInfo.textContent = "Descarga completada.";
         }
+      }
+      // Nuevo: Mostrar cada notificación en el ticker
+      if (data.status === "notification") {
+        addTickerMessage(data.message);
       }
     } catch (error) {
       console.error("Error al parsear el mensaje:", error);
@@ -130,6 +152,24 @@ function initWebSocket() {
     console.warn("WebSocket cerrado. Intentando reconectar en 3 segundos...");
     setTimeout(initWebSocket, 3000);
   };
+}
+
+/**
+ * Agrega un mensaje al ticker de notificaciones.
+ * Cada mensaje se muestra y se elimina después de 10 segundos.
+ * @param {string} message - Mensaje a mostrar.
+ */
+function addTickerMessage(message) {
+  const tickerContainer = document.getElementById("ticker-container");
+  if (!tickerContainer) return;
+  const tickerMessage = document.createElement("span");
+  tickerMessage.className = "ticker-message";
+  tickerMessage.textContent = message + "   "; // Espaciado adicional
+  tickerContainer.appendChild(tickerMessage);
+  // Se asume que mediante CSS se define la animación de desplazamiento para la clase "ticker-message"
+  setTimeout(() => {
+    tickerMessage.remove();
+  }, 10000);
 }
 
 // -------------------- Modo Streaming: Auto-ocultación de Controles --------------------
@@ -223,7 +263,11 @@ if (downloadForm) {
     socket.send(JSON.stringify(message));
 
     downloadNotifications.classList.add("active");
-    downloadNotifications.textContent = "Iniciando descarga...";
+    // Se actualiza el contenedor de progreso (dentro de downloadNotifications)
+    const progressInfo = document.getElementById("progress-info");
+    if (progressInfo) {
+      progressInfo.textContent = "Iniciando descarga...";
+    }
   });
 }
 

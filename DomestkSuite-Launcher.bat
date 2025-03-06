@@ -19,11 +19,11 @@ if not exist "node_modules" (
 
 REM Iniciar el servidor downloader (WebSocket) en una nueva ventana
 echo Iniciando el Downloader (servidor WebSocket)...
-start "Downloader Server" cmd /k "npm start"
+start "Downloader Server" cmd /k "call npm start"
 
 REM Iniciar el servidor para la interfaz web en una nueva ventana
 echo Iniciando el servidor frontend...
-start "Frontend Server" cmd /k "npm run serve"
+start "Frontend Server" cmd /k "call npm run serve"
 
 REM Esperar 5 segundos para que los servidores se inicien
 timeout /t 5

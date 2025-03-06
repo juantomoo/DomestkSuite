@@ -185,7 +185,13 @@ async function getInitialProps(url, page) {
 }
 
 /**
- * Descarga el curso completo, max 4 descargas simultáneas, y envía progreso global cada 2s.
+ * GLOBAL: Mapa para almacenar el progreso (en bytes) de cada video en proceso.
+ * La clave será una combinación única (course_unit_index).
+ */
+let videoProgressMap = {};
+
+/**
+ * Descarga el curso completo, max 4 descargas simultáneas, y envía progreso global cada 1s.
  * @param {string} courseUrl - URL del curso.
  * @param {string} subtitleLang - Idioma de subtítulos (ej: 'es').
  * @param {string} sessionCookie - Cookie _domestika_session.
@@ -252,39 +258,52 @@ async function downloadCourse(courseUrl, subtitleLang, sessionCookie, credential
   console.log(`Total Videos: ${tasks.length}`);
 
   let downloadedCount = 0;   // videos completados
-  let totalDownloadedMB = 0; // MB totales descargados
+  let totalDownloadedMB = 0; // MB totales de videos completados
   const startTime = Date.now();
   const totalVideos = tasks.length;
-  let isRunning = true;
+  // Estimación total en MB: se asume 50 MB por video
+  const estimatedTotalMB = totalVideos * 50;
+  // Reiniciar el mapa de progreso global
+  videoProgressMap = {};
 
-  // Timer para enviar progreso cada 2s
+  // Timer para enviar progreso cada 1 segundo (actualización en tiempo real)
   const progressTimer = setInterval(() => {
-    if (!isRunning) return;
-    let progress = Math.floor((downloadedCount / totalVideos) * 100);
-    let elapsed = (Date.now() - startTime) / 1000;
-    let avgSpeed = elapsed > 0 ? totalDownloadedMB / elapsed : 0; // MB/s
-    let avgSize = downloadedCount > 0 ? totalDownloadedMB / downloadedCount : 0;
-    let remaining = totalVideos - downloadedCount;
-    let timeRemaining = avgSpeed > 0 ? (remaining * avgSize) / avgSpeed : 0;
+    let inProgressBytes = 0;
+    for (const key in videoProgressMap) {
+      inProgressBytes += videoProgressMap[key];
+    }
+    // total de bytes de videos completados (convertidos a bytes)
+    const completedBytes = totalDownloadedMB * 1024 * 1024;
+    // Suma de bytes completados y de los videos en proceso
+    const globalDownloadedBytes = completedBytes + inProgressBytes;
+    const globalDownloadedMB = globalDownloadedBytes / (1024 * 1024);
+    const progressPercentage = (globalDownloadedMB / estimatedTotalMB) * 100;
+
+    let elapsed = (Date.now() - startTime) / 1000; // en segundos
+    let avgSpeed = elapsed > 0 ? globalDownloadedMB / elapsed : 0; // MB/s
+    let remainingMB = estimatedTotalMB - globalDownloadedMB;
+    let timeRemaining = avgSpeed > 0 ? remainingMB / avgSpeed : 0;
 
     ws.send(JSON.stringify({
       status: 'downloading',
-      progress,
+      progress: Math.floor(progressPercentage),
       timeRemaining: `${Math.ceil(timeRemaining)}s`
     }));
-  }, 2000);
+  }, 1000);
 
   // Procesar la cola en lotes de hasta 4 descargas simultáneas
   while (tasks.length > 0) {
     let batch = tasks.splice(0, MAX_CONCURRENT_DOWNLOADS);
     await Promise.all(batch.map(async (task) => {
       try {
+        // Se pasa "ws" para que la función de descarga pueda enviar notificaciones y actualizar su progreso
         let sizeMB = await downloadVideo(
           task.videoData,
           task.courseTitle,
           task.unitTitle,
           task.index,
-          subtitleLang
+          subtitleLang,
+          ws
         );
         downloadedCount++;
         totalDownloadedMB += sizeMB;
@@ -296,7 +315,6 @@ async function downloadCourse(courseUrl, subtitleLang, sessionCookie, credential
   }
 
   clearInterval(progressTimer);
-  isRunning = false;
 
   console.log("All Videos Downloaded");
 }
@@ -306,8 +324,20 @@ async function downloadCourse(courseUrl, subtitleLang, sessionCookie, credential
  * - Verifica si ya existe el archivo y pregunta si se desea reemplazar.
  * - Ignora errores de subtítulos para no detener la descarga de video.
  * - Retorna el tamaño del video en MB.
+ * 
+ * Se han incorporado:
+ *   a) Envío de notificaciones (ticker) vía WebSocket con cada salida recibida.
+ *   b) Actualización en tiempo real del progreso a partir de la lectura de bloques (stdout).
+ * 
+ * @param {object} videoData - Datos del video a descargar.
+ * @param {string} courseTitle - Título del curso.
+ * @param {string} unitTitle - Título de la unidad.
+ * @param {number} index - Índice del video.
+ * @param {string} subtitleLang - Idioma de subtítulos.
+ * @param {WebSocket} ws - Conexión WebSocket para notificaciones.
+ * @returns {Promise<number>} - Tamaño del video descargado en MB.
  */
-async function downloadVideo(videoData, courseTitle, unitTitle, index, subtitleLang) {
+async function downloadVideo(videoData, courseTitle, unitTitle, index, subtitleLang, ws) {
   const saveDir = path.join(COURSES_DIR, courseTitle, videoData.section || unitTitle);
   await fsPromises.mkdir(saveDir, { recursive: true }).catch(err => {
     console.error("Error creando el directorio:", err);
@@ -340,7 +370,7 @@ async function downloadVideo(videoData, courseTitle, unitTitle, index, subtitleL
     }
   }
 
-  // Argumentos para el video
+  // Definir argumentos para la descarga del video
   let videoArgs = [
     '-sv', 'res="1080*":codec=hvc1:for=best',
     `"${videoData.playbackURL}"`,
@@ -348,7 +378,7 @@ async function downloadVideo(videoData, courseTitle, unitTitle, index, subtitleL
     '--save-name', `"${saveName}"`
   ];
 
-  // Argumentos para subtítulos
+  // Definir argumentos para la descarga de subtítulos
   let subtitleArgs = [
     '--auto-subtitle-fix',
     '--sub-format', 'SRT',
@@ -359,13 +389,27 @@ async function downloadVideo(videoData, courseTitle, unitTitle, index, subtitleL
   ];
 
   console.log(`Descargando video: ${videoData.title}`);
+  ws.send(JSON.stringify({ status: 'notification', message: `Descargando video: ${videoData.title}` })); // Ticker
 
-  // Descarga del video con manejo robusto de errores
+  // Crear una clave única para este video y registrarla en el mapa de progreso
+  const videoKey = `${courseTitle}_${unitTitle}_${index}`;
+  videoProgressMap[videoKey] = 0;
+
+  // Descarga del video con manejo robusto de errores y actualización en tiempo real
   const videoPromise = new Promise((resolve, reject) => {
     const proc = spawn(EXECUTABLE, videoArgs, { shell: true });
     let errorOutput = '';
     proc.stdout.on('data', (data) => {
-      console.log(`stdout: ${data}`);
+      const output = data.toString();
+      console.log(`stdout: ${output}`);
+      // Enviar cada mensaje a la interfaz para el ticker
+      ws.send(JSON.stringify({ status: 'notification', message: output.trim() }));
+      // Intentar extraer el progreso descargado en bytes
+      const match = output.match(/Downloaded\s+(\d+)\s+bytes/i);
+      if (match) {
+        const bytesDownloaded = parseInt(match[1], 10);
+        videoProgressMap[videoKey] = bytesDownloaded;
+      }
     });
     proc.stderr.on('data', (data) => {
       errorOutput += data.toString();

@@ -253,6 +253,34 @@ main {
   display: block;
 }
 
+/* ----- NUEVOS ESTILOS PARA PROGRESO Y TICKER ----- */
+#progress-info {
+  font-size: 1rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+#ticker-container {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+}
+
+.ticker-message {
+  display: inline-block;
+  padding-right: 2rem;
+  color: var(--accent-color);
+  animation: ticker 10s linear infinite;
+}
+
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
 /* ----------------------------------------------------------
    PANTALLA DE VISUALIZACIÓN
 ----------------------------------------------------------- */
